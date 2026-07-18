@@ -2,8 +2,10 @@
 node_modules/
 .next/
 .next.backup-*/
+.vercel/
 out/
 playwright-report/
 test-results/
 *.log
 .DS_Store
+.vercel
