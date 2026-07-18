@@ -2,6 +2,7 @@
   "name": "buzaiyaobai",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.14.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +13,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "caniuse-lite": "^1.0.30001727",
+    "caniuse-lite": "1.0.30001727",
     "next": "15.4.2",
     "react": "19.1.0",
     "react-dom": "19.1.0"
