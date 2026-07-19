@@ -41,6 +41,18 @@ describe('POST /api/decision', () => {
     expect(body.status).toBe('needs_clarification');
   });
 
+  it('asks the user to replace placeholder A/B/C place names before map routing', async () => {
+    const response = await post({
+      question:
+        '我上午已经到了目的地 A，下午想去目的地 B 或目的地 C。请从交通便利度和游客评价两个方面帮我比较，并建议我去哪里。',
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('needs_clarification');
+    expect(body.message).toContain('示例占位符');
+  });
+
   it('falls back when map routing is unavailable', async () => {
     const response = await post({ question: '我已经到了西湖，下午去地图失败或岳王庙。' });
     const body = await response.json();

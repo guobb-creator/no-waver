@@ -68,7 +68,7 @@ export class MockDecisionModelClient implements DecisionModelClient {
   }
 
   private needsClarification(text: string): boolean {
-    const hasUnknownPlace = /(xxx|未知|不清楚|不知道|随便哪里)/i.test(text);
+    const hasUnknownPlace = /(xxx|未知|不清楚|不知道|随便哪里|目的地\s*[ABCＡＢＣ]|地点\s*[ABCＡＢＣ])/i.test(text);
     const hasObviousCrossCity =
       (text.includes('北京') && text.includes('上海')) ||
       (text.includes('广州') && text.includes('深圳'));

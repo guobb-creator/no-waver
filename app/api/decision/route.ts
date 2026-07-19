@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDecisionModelClient } from '@/lib/decision-model/client-factory';
 import { getMapRoutingClient } from '@/lib/map-routing/client-factory';
+import { validateExtractedPlaces, validateQuestionPlaceholders } from '@/lib/place-sanity';
 import { validateQuestion } from '@/lib/validation';
 
 export const runtime = 'nodejs';
@@ -32,10 +33,28 @@ export async function POST(request: Request) {
     );
   }
 
+  const questionSanity = validateQuestionPlaceholders(validation.question);
+  if (!questionSanity.valid) {
+    return NextResponse.json({
+      status: 'needs_clarification',
+      message: questionSanity.message,
+      maxInputChars: client.maxInputChars,
+    });
+  }
+
   try {
     const places = await client.extractPlaces(validation.question);
     if (places.status === 'needs_clarification') {
       return NextResponse.json({ ...places, maxInputChars: client.maxInputChars });
+    }
+
+    const placeSanity = validateExtractedPlaces(places);
+    if (!placeSanity.valid) {
+      return NextResponse.json({
+        status: 'needs_clarification',
+        message: placeSanity.message,
+        maxInputChars: client.maxInputChars,
+      });
     }
 
     const routeResult = await mapClient.planCandidateRoutes({
