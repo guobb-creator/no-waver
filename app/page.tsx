@@ -52,8 +52,14 @@ export default function Home() {
   return (
     <main className="page-shell">
       <section className="hero" aria-labelledby="page-title">
-        <p className="eyebrow">旅行中的快速决策助手</p>
-        <h1 id="page-title">不再摇摆</h1>
+        <div className="brand-row">
+          <h1 id="page-title">不再摇摆</h1>
+          <p className="tagline">你的快速决策助手</p>
+        </div>
+        <nav className="category-tabs" aria-label="决策分类">
+          <button className="category-tab" type="button">日常</button>
+          <button className="category-tab category-tab--active" type="button" aria-current="page">旅行</button>
+        </nav>
         <p className="intro">上午已经抵达一处目的地？说说下午在同城的两个候选地点之间犹豫什么。</p>
       </section>
 
