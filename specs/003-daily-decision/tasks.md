@@ -197,5 +197,5 @@ T012 + T013 + T014 → T015 → T016 → T017 → T018
 | 2026-07-19 | `npm test -- --run` | 通过，9 个测试文件、43 个测试用例 |
 | 2026-07-19 | `npm run build` | 通过，包含 `/api/daily-decision` 与 `/api/decision` |
 | 2026-07-19 | `npm run test:e2e` | 通过，Chromium 与 mobile-chrome 共 12 个用例 |
-| 2026-07-19 | 日常真实模型冒烟测试 | 待线上部署后执行 |
-| 2026-07-19 | 旅行地图路线回归测试 | 待线上部署后执行 |
+| 2026-07-19 | 日常真实模型冒烟测试 | 通过，`POST https://nxvd.beer/api/daily-decision` 返回 `success` 与“我的建议” |
+| 2026-07-19 | 旅行地图路线回归测试 | 通过，`POST https://nxvd.beer/api/decision` 返回路线对比与“我的建议” |
