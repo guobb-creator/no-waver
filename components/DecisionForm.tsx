@@ -28,7 +28,7 @@ export function DecisionForm({
 
   return (
     <form className="decision-form" onSubmit={handleSubmit}>
-      <label htmlFor="question">告诉我你的旅行选择</label>
+      <label htmlFor="question">说说你想去哪里，我帮你做决定。</label>
       <textarea
         id="question"
         name="question"

@@ -23,7 +23,7 @@ describe('decision components', () => {
     const onChange = vi.fn();
     render(<DecisionForm value="我在西湖，去灵隐寺或岳庙" maxInputChars={30} isLoading={false} onChange={onChange} onSubmit={vi.fn()} />);
 
-    fireEvent.input(screen.getByRole('textbox', { name: '告诉我你的旅行选择' }), { target: { value: '新的旅行问题' } });
+    fireEvent.input(screen.getByRole('textbox', { name: '说说你想去哪里，我帮你做决定。' }), { target: { value: '新的旅行问题' } });
     expect(onChange).toHaveBeenCalledWith('新的旅行问题');
   });
 });
