@@ -3,6 +3,8 @@
 import type { FormEvent } from 'react';
 
 type DecisionFormProps = {
+  title: string;
+  helpText: string;
   value: string;
   maxInputChars: number;
   isLoading: boolean;
@@ -11,6 +13,8 @@ type DecisionFormProps = {
 };
 
 export function DecisionForm({
+  title,
+  helpText,
   value,
   maxInputChars,
   isLoading,
@@ -28,7 +32,7 @@ export function DecisionForm({
 
   return (
     <form className="decision-form" onSubmit={handleSubmit}>
-      <label htmlFor="question">说说你想去哪里，我帮你做决定。</label>
+      <label htmlFor="question">{title}</label>
       <textarea
         id="question"
         name="question"
@@ -40,7 +44,7 @@ export function DecisionForm({
         aria-describedby="input-help input-count"
       />
       <p id="input-help" className="input-help">
-        请说明你所在的地点/出发的地点及想去的目的地，可补充出发时间、交通方式等关注点。
+        {helpText}
       </p>
       <div className="form-footer">
         <p id="input-count" className={isTooLong ? 'input-count input-count--error' : 'input-count'}>

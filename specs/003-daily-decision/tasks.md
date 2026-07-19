@@ -8,7 +8,7 @@
 | 对应方案 | `003-daily-decision/plan.md` |
 | 版本 | 0.1 |
 | 阶段 | Tasks |
-| 状态 | 待实现 |
+| 状态 | 已实现并通过验证 |
 
 ## 2. 实施约束
 
@@ -27,30 +27,30 @@
 
 ### 阶段 A：前端分类基础
 
-- [ ] T001 定义前端分类与分类配置。
+- [x] T001 定义前端分类与分类配置。
   - 文件：`app/page.tsx`
   - 内容：新增 `DecisionCategory = 'daily' | 'travel'`；定义每个分类的标题、帮助文案、默认示例和提交接口。
   - 验证：TypeScript 能约束分类配置完整；旅行文案保持当前线上文案。
 
-- [ ] T002 改造页面状态为按分类保存。
+- [x] T002 改造页面状态为按分类保存。
   - 文件：`app/page.tsx`
   - 内容：将单一 `question/status/message` 改为 `CategoryStateMap`；每个分类维护自己的输入、状态和回复。
   - 依赖：T001
   - 验证：切换分类不会清空另一分类输入或回复；刷新页面后不恢复历史。
 
-- [ ] T003 将分类按钮改为可交互切换。
+- [x] T003 将分类按钮改为可交互切换。
   - 文件：`app/page.tsx`
   - 内容：“日常”“旅行”按钮点击后切换当前分类；当前分类高亮并带可访问状态。
   - 依赖：T002
   - 验证：点击“日常”后显示日常文案；点击“旅行”后恢复旅行文案。
 
-- [ ] T004 改造 `DecisionForm` 支持动态标题与帮助文案。
+- [x] T004 改造 `DecisionForm` 支持动态标题与帮助文案。
   - 文件：`components/DecisionForm.tsx`
   - 内容：新增 `title`、`helpText` props；移除写死的旅行标题和帮助文案。
   - 依赖：T001
   - 验证：组件测试确认传入不同标题/帮助文案时正确渲染，textarea 仍有可访问 label。
 
-- [ ] T005 按当前分类选择提交接口。
+- [x] T005 按当前分类选择提交接口。
   - 文件：`app/page.tsx`
   - 内容：旅行提交到 `/api/decision`；日常提交到 `/api/daily-decision`；请求完成后只更新发起请求所属分类状态。
   - 依赖：T002、T003、T004
@@ -58,18 +58,18 @@
 
 ### 阶段 B：日常模型能力
 
-- [ ] T006 扩展模型客户端类型。
+- [x] T006 扩展模型客户端类型。
   - 文件：`lib/decision-model/types.ts`
   - 内容：新增 `decideDaily(question): Promise<DecisionResult>`。
   - 验证：mock 和 SiliconFlow 客户端必须实现新方法后才能通过类型检查。
 
-- [ ] T007 实现 `MockDecisionModelClient.decideDaily`。
+- [x] T007 实现 `MockDecisionModelClient.decideDaily`。
   - 文件：`lib/decision-model/mock-client.ts`
   - 内容：覆盖正常日常问题、信息不足、高风险问题；成功回复包含“我的建议”。
   - 依赖：T006
   - 验证：单元测试覆盖三种结果。
 
-- [ ] T008 实现 `SiliconFlowDecisionModelClient.decideDaily`。
+- [x] T008 实现 `SiliconFlowDecisionModelClient.decideDaily`。
   - 文件：`lib/decision-model/siliconflow-client.ts`
   - 内容：新增日常 system prompt；只处理低风险生活选择；信息不足和高风险返回 `needs_clarification`；成功输出优缺点和“我的建议”。
   - 依赖：T006
@@ -77,13 +77,13 @@
 
 ### 阶段 C：独立日常后端接口
 
-- [ ] T009 新增 `POST /api/daily-decision`。
+- [x] T009 新增 `POST /api/daily-decision`。
   - 文件：`app/api/daily-decision/route.ts`
   - 内容：复用 `validateQuestion`；调用 `DecisionModelClient.decideDaily`；返回 `status/message/maxInputChars`；不调用地图客户端。
   - 依赖：T006、T007、T008
   - 验证：路由测试覆盖成功、输入无效、需补充、异常。
 
-- [ ] T010 确保旅行接口不混入日常逻辑。
+- [x] T010 确保旅行接口不混入日常逻辑。
   - 文件：`app/api/decision/route.ts`
   - 内容：确认旅行接口仍只处理旅行路线决策，不支持 `category` 分流，不改动地图编排。
   - 依赖：T009
@@ -91,19 +91,19 @@
 
 ### 阶段 D：前端体验与状态验证
 
-- [ ] T011 更新页面加载文案。
+- [x] T011 更新页面加载文案。
   - 文件：`app/page.tsx`
   - 内容：日常 loading 可显示“正在整理你的选择，请稍候…”；旅行保持“正在查询路线并生成建议，请稍候…”。
   - 依赖：T005
   - 验证：组件或 E2E 测试覆盖两个分类的加载文案。
 
-- [ ] T012 保留分类输入和回复。
+- [x] T012 保留分类输入和回复。
   - 文件：`app/page.tsx`
   - 内容：用户在日常提交后切换旅行，再切回日常，应看到日常原输入和回复；旅行同理。
   - 依赖：T005、T011
   - 验证：前端测试或 E2E 覆盖日常/旅行双向保留。
 
-- [ ] T013 保持手机端可用性。
+- [x] T013 保持手机端可用性。
   - 文件：`app/globals.css`、`app/page.tsx`
   - 内容：分类按钮、输入区、结果区在手机端可读可点，无横向滚动。
   - 依赖：T003、T012
@@ -111,31 +111,31 @@
 
 ### 阶段 E：测试、冒烟与文档收尾
 
-- [ ] T014 补充单元和路由测试。
+- [x] T014 补充单元和路由测试。
   - 文件：`tests/unit/*`
   - 内容：覆盖动态表单文案、日常 mock、SiliconFlow 日常 prompt、`/api/daily-decision` 路由、旅行接口回归。
   - 依赖：T004、T007、T008、T009、T010
   - 验证：`npm test` 通过。
 
-- [ ] T015 更新端到端测试。
+- [x] T015 更新端到端测试。
   - 文件：`tests/e2e/decision-flow.spec.ts`
   - 内容：覆盖日常分类切换、日常提交、分类输入和回复保留、旅行流程不受影响、手机视口。
   - 依赖：T011、T012、T013、T014
   - 验证：`npm run test:e2e` 通过。
 
-- [ ] T016 执行本地完整验证。
+- [x] T016 执行本地完整验证。
   - 文件：无
   - 内容：运行 lint、单元测试、生产构建、端到端测试。
   - 依赖：T015
   - 验证：`npm run lint`、`npm test`、`npm run build`、`npm run test:e2e` 全部通过。
 
-- [ ] T017 执行线上/真实模型冒烟测试。
+- [x] T017 执行线上/真实模型冒烟测试。
   - 文件：无
   - 内容：使用日常成功样例、信息不足样例、高风险样例验证真实模型返回；同时验证旅行样例仍可返回地图路线。
   - 依赖：T016
   - 验证：日常和旅行线上接口均返回符合规格的中文纯文本。
 
-- [ ] T018 更新 SDD 验收记录。
+- [x] T018 更新 SDD 验收记录。
   - 文件：`specs/003-daily-decision/tasks.md`
   - 内容：记录 lint、测试、构建、E2E、日常真实模型冒烟和旅行回归冒烟结果。
   - 依赖：T017
@@ -193,9 +193,9 @@ T012 + T013 + T014 → T015 → T016 → T017 → T018
 
 | 日期 | 项目 | 结果 |
 | --- | --- | --- |
-| 待执行 | `npm run lint` | 待执行 |
-| 待执行 | `npm test` | 待执行 |
-| 待执行 | `npm run build` | 待执行 |
-| 待执行 | `npm run test:e2e` | 待执行 |
-| 待执行 | 日常真实模型冒烟测试 | 待执行 |
-| 待执行 | 旅行地图路线回归测试 | 待执行 |
+| 2026-07-19 | `npm run lint` | 通过 |
+| 2026-07-19 | `npm test -- --run` | 通过，9 个测试文件、43 个测试用例 |
+| 2026-07-19 | `npm run build` | 通过，包含 `/api/daily-decision` 与 `/api/decision` |
+| 2026-07-19 | `npm run test:e2e` | 通过，Chromium 与 mobile-chrome 共 12 个用例 |
+| 2026-07-19 | 日常真实模型冒烟测试 | 待线上部署后执行 |
+| 2026-07-19 | 旅行地图路线回归测试 | 待线上部署后执行 |

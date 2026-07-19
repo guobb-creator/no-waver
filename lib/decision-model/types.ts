@@ -16,6 +16,7 @@ export type ExtractedTripPlaces =
 export interface DecisionModelClient {
   readonly maxInputChars: number;
   decide(question: string): Promise<DecisionResult>;
+  decideDaily(question: string): Promise<DecisionResult>;
   extractPlaces(question: string): Promise<ExtractedTripPlaces>;
   decideWithRoutes(question: string, routeSummary: RouteSummary): Promise<DecisionResult>;
   decideWithoutMapData(question: string, unavailableReason: string): Promise<DecisionResult>;

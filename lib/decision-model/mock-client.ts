@@ -24,6 +24,35 @@ export class MockDecisionModelClient implements DecisionModelClient {
     };
   }
 
+  async decideDaily(question: string): Promise<DecisionResult> {
+    const text = question.trim();
+
+    if (needsDailySafetyClarification(text)) {
+      return {
+        status: 'needs_clarification',
+        message: '这个选择可能涉及健康、法律、财务或人身安全等高风险后果，我不能直接替你做决定。请先咨询专业人士，或把问题改成低风险的日常小选择。',
+      };
+    }
+
+    if (needsDailyDetailClarification(text)) {
+      return {
+        status: 'needs_clarification',
+        message: '请补充你在纠结的两个选项，以及最在意的因素，比如时间、预算、精力、心情或风险。',
+      };
+    }
+
+    return {
+      status: 'success',
+      message: [
+        '我先帮你把选择拆开看：',
+        '选项一的优点通常是更可控、更贴近当前状态；缺点是可能需要投入更多精力或时间。',
+        '选项二的优点通常是更省心、更快得到结果；缺点是成本、体验或后续影响可能没那么理想。',
+        '',
+        '我的建议：如果你现在最想降低负担，就选更省心的那个；如果你还能承受一点投入，并且长期收益更明显，就选更可控的那个。这个演示回复用于验证日常决策流程。',
+      ].join('\n'),
+    };
+  }
+
   async extractPlaces(question: string): Promise<ExtractedTripPlaces> {
     const text = question.trim();
     if (this.needsClarification(text)) {
@@ -77,6 +106,21 @@ export class MockDecisionModelClient implements DecisionModelClient {
 
     return hasUnknownPlace || hasObviousCrossCity || !hasCurrentPlace || !hasTwoOptions;
   }
+}
+
+function needsDailySafetyClarification(text: string): boolean {
+  return /(自杀|自残|伤害|打架|报警|诊断|用药|停药|手术|怀孕|股票|基金|投资|贷款|借钱|全部积蓄|离婚诉讼|起诉|违法|犯罪)/.test(
+    text,
+  );
+}
+
+function needsDailyDetailClarification(text: string): boolean {
+  const hasChoiceSignal = /(还是|或|或者|纠结|选|选择|要不要|该不该)/.test(text);
+  const hasContextSignal = /(因为|想|但|不过|担心|预算|时间|精力|心情|风险|明天|今天|今晚|周末|累|钱|贵|便宜)/.test(
+    text,
+  );
+
+  return text.length < 12 || !hasChoiceSignal || !hasContextSignal;
 }
 
 function extractMockPlaces(text: string): ExtractedTripPlaces | null {

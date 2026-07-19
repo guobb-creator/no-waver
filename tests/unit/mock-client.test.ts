@@ -26,6 +26,27 @@ describe('MockDecisionModelClient', () => {
     expect(result.status).toBe('needs_clarification');
   });
 
+  it('generates a daily suggestion for a low-risk choice', async () => {
+    const result = await client.decideDaily('我今晚纠结是自己做饭还是点外卖，想省钱但也不想太累，明天还要早起。');
+
+    expect(result.status).toBe('success');
+    expect(result.message).toContain('我的建议');
+  });
+
+  it('asks for daily clarification when options are too vague', async () => {
+    const result = await client.decideDaily('我该怎么办？');
+
+    expect(result.status).toBe('needs_clarification');
+    expect(result.message).toContain('两个选项');
+  });
+
+  it('does not directly decide high-risk daily requests', async () => {
+    const result = await client.decideDaily('我纠结要不要把全部积蓄拿去投资股票。');
+
+    expect(result.status).toBe('needs_clarification');
+    expect(result.message).toContain('高风险');
+  });
+
   it('extracts A/B/C places for map routing', async () => {
     const result = await client.extractPlaces('我已经到了杭州西湖，下午去灵隐寺或岳王庙，想比较交通和游客评价。');
 

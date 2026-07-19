@@ -78,6 +78,39 @@ describe('SiliconFlowDecisionModelClient', () => {
     );
   });
 
+  it('uses the daily decision prompt for low-risk life choices', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  status: 'success',
+                  message: '自己做饭的优点是省钱，点外卖的优点是省力。\n\n我的建议：今晚点外卖。',
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    const client = new SiliconFlowDecisionModelClient(options);
+    const result = await client.decideDaily('我今晚纠结是自己做饭还是点外卖，想省钱但也不想太累。');
+
+    expect(result.status).toBe('success');
+    expect(result.message).toContain('我的建议');
+
+    const requestBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as {
+      messages: Array<{ content: string }>;
+    };
+    expect(requestBody.messages[0].content).toContain('日常决策助手');
+    expect(requestBody.messages[0].content).toContain('低风险');
+    expect(requestBody.messages[0].content).not.toContain('地图导航数据由服务端提供');
+  });
+
   it('extracts places with a structured model call', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
