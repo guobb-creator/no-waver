@@ -68,7 +68,7 @@ type DecisionApiResponse = {
 };
 
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState<DecisionCategory>('travel');
+  const [activeCategory, setActiveCategory] = useState<DecisionCategory>('daily');
   const [categoryStates, setCategoryStates] = useState(createInitialCategoryState);
   const [maxInputChars, setMaxInputChars] = useState(MAX_INPUT_CHARS);
   const activeConfig = categoryConfigs[activeCategory];

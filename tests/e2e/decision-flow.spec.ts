@@ -27,6 +27,7 @@ test('submits the editable default example and shows a plain-text reply', async 
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: '旅行' }).click();
 
   const input = page.getByLabel('说说你想去哪里，我帮你做决定。');
   await expect(input).toContainText('目的地 A');
@@ -38,7 +39,7 @@ test('submits the editable default example and shows a plain-text reply', async 
   await expect(page.getByText('交通更顺路', { exact: false })).toBeVisible();
 });
 
-test('switches to daily decisions and submits to the daily endpoint', async ({ page }) => {
+test('defaults to daily decisions and submits to the daily endpoint', async ({ page }) => {
   let dailyRequestCount = 0;
   let travelRequestCount = 0;
 
@@ -61,7 +62,6 @@ test('switches to daily decisions and submits to the daily endpoint', async ({ p
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: '日常' }).click();
 
   const dailyInput = page.getByLabel('说说你在纠结什么，我帮你做决定。');
   await expect(dailyInput).toContainText('自己做饭还是点外卖');
@@ -92,6 +92,7 @@ test('preserves each category input and latest reply while switching', async ({ 
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: '旅行' }).click();
   const travelInput = page.getByLabel('说说你想去哪里，我帮你做决定。');
   await travelInput.clear();
   await travelInput.fill('旅行输入：我已经到了西湖，下午去灵隐寺或岳庙。');
@@ -124,6 +125,7 @@ test('asks the user to confirm locations when information is incomplete', async 
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: '旅行' }).click();
   await page.getByLabel('说说你想去哪里，我帮你做决定。').fill('下午我应该去哪里？');
   await page.getByRole('button', { name: '帮我做决定' }).click();
 
@@ -143,6 +145,7 @@ test('keeps the form locked while a decision is loading', async ({ page }) => {
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: '旅行' }).click();
   await page.getByLabel('说说你想去哪里，我帮你做决定。').fill('我已经到了西湖，下午去灵隐寺或岳庙，想比较交通和游客评价。');
   await page.getByRole('button', { name: '帮我做决定' }).click();
 
@@ -175,6 +178,7 @@ test('allows retry after a temporary service failure', async ({ page }) => {
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: '旅行' }).click();
   await page.getByLabel('说说你想去哪里，我帮你做决定。').fill('我已经到了西湖，下午去灵隐寺或岳庙，想比较交通和游客评价。');
   await page.getByRole('button', { name: '帮我做决定' }).click();
 
