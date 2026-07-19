@@ -40,7 +40,7 @@ export function DecisionForm({
         aria-describedby="input-help input-count"
       />
       <p id="input-help" className="input-help">
-        请说明你上午所在的地点，以及下午想去的两个候选目的地。可补充出发时间、交通方式或关注点。
+        请说明你所在的地点/出发的地点及想去的目的地，可补充出发时间、交通方式等关注点。
       </p>
       <div className="form-footer">
         <p id="input-count" className={isTooLong ? 'input-count input-count--error' : 'input-count'}>
