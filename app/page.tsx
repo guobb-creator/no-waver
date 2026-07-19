@@ -119,7 +119,7 @@ export default function Home() {
       <section className="hero" aria-labelledby="page-title">
         <div className="brand-row">
           <h1 id="page-title">不再摇摆</h1>
-          <p className="tagline">你的快速决策助手</p>
+          <p className="tagline">你的 AI 决策助手</p>
         </div>
         <nav className="category-tabs" aria-label="决策分类">
           {categoryOrder.map((category) => {
