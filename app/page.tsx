@@ -60,7 +60,7 @@ export default function Home() {
           <button className="category-tab" type="button">日常</button>
           <button className="category-tab category-tab--active" type="button" aria-current="page">旅行</button>
         </nav>
-        <p className="intro">上午已经抵达一处目的地？说说下午在同城的两个候选地点之间犹豫什么。</p>
+        <p className="intro">说说你想去哪里，我帮你做决定。</p>
       </section>
 
       <DecisionForm
