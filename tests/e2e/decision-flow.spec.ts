@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const successResponse = {
   status: 'success',
-  message: '演示建议：请优先选择交通更顺路的目的地。',
+  message: '路线对比：\n\n灵隐寺：公交/地铁约 25 分钟，驾车/打车约 12 分钟\n岳王庙：公交/地铁约 15 分钟，骑行约 10 分钟\n\n我的建议：请优先选择交通更顺路的目的地。',
   maxInputChars: 12000,
 };
 
@@ -28,6 +28,7 @@ test('submits the editable default example and shows a plain-text reply', async 
   await page.getByRole('button', { name: '帮我做决定' }).click();
 
   await expect(page.getByRole('heading', { name: '给你的建议' })).toBeVisible();
+  await expect(page.getByText('路线对比', { exact: false })).toBeVisible();
   await expect(page.getByText('交通更顺路', { exact: false })).toBeVisible();
 });
 
@@ -63,7 +64,7 @@ test('keeps the form locked while a decision is loading', async ({ page }) => {
   await page.getByRole('button', { name: '帮我做决定' }).click();
 
   await expect(page.getByRole('button', { name: '正在分析…' })).toBeDisabled();
-  await expect(page.getByText('正在整理你的选择，请稍候…')).toBeVisible();
+  await expect(page.getByText('正在查询路线并生成建议，请稍候…')).toBeVisible();
   await expect(page.getByRole('heading', { name: '给你的建议' })).toBeVisible();
 });
 

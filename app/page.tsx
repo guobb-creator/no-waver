@@ -65,7 +65,7 @@ export default function Home() {
         onSubmit={submitDecision}
       />
 
-      {status === 'loading' && <p className="loading" aria-live="polite">正在整理你的选择，请稍候…</p>}
+      {status === 'loading' && <p className="loading" aria-live="polite">正在查询路线并生成建议，请稍候…</p>}
       {(status === 'success' || status === 'needs_clarification' || status === 'error') && (
         <DecisionResponse kind={status} message={message} />
       )}

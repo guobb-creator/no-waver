@@ -19,6 +19,8 @@ describe('POST /api/decision', () => {
     expect(response.status).toBe(200);
     expect(body.status).toBe('success');
     expect(typeof body.message).toBe('string');
+    expect(body.message).toContain('路线对比');
+    expect(body.message).toContain('我的建议');
     expect(body.maxInputChars).toBeGreaterThan(0);
   });
 
@@ -37,5 +39,14 @@ describe('POST /api/decision', () => {
 
     expect(response.status).toBe(200);
     expect(body.status).toBe('needs_clarification');
+  });
+
+  it('falls back when map routing is unavailable', async () => {
+    const response = await post({ question: '我已经到了西湖，下午去地图失败或岳王庙。' });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('success');
+    expect(body.message).toContain('暂时没有获取到地图导航数据');
   });
 });

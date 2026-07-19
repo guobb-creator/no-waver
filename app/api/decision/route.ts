@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getDecisionModelClient } from '@/lib/decision-model/client-factory';
+import { getMapRoutingClient } from '@/lib/map-routing/client-factory';
 import { validateQuestion } from '@/lib/validation';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   const client = getDecisionModelClient();
+  const mapClient = getMapRoutingClient();
   let body: unknown;
 
   try {
@@ -31,7 +33,26 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await client.decide(validation.question);
+    const places = await client.extractPlaces(validation.question);
+    if (places.status === 'needs_clarification') {
+      return NextResponse.json({ ...places, maxInputChars: client.maxInputChars });
+    }
+
+    const routeResult = await mapClient.planCandidateRoutes({
+      originName: places.origin,
+      candidateNames: places.candidates,
+      cityHint: places.cityHint,
+    });
+
+    if (routeResult.status === 'needs_clarification') {
+      return NextResponse.json({ ...routeResult, maxInputChars: client.maxInputChars });
+    }
+
+    const result =
+      routeResult.status === 'success'
+        ? await client.decideWithRoutes(validation.question, routeResult.summary)
+        : await client.decideWithoutMapData(validation.question, routeResult.message);
+
     return NextResponse.json({ ...result, maxInputChars: client.maxInputChars });
   } catch {
     return NextResponse.json(

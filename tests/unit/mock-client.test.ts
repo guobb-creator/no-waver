@@ -25,4 +25,44 @@ describe('MockDecisionModelClient', () => {
 
     expect(result.status).toBe('needs_clarification');
   });
+
+  it('extracts A/B/C places for map routing', async () => {
+    const result = await client.extractPlaces('我已经到了杭州西湖，下午去灵隐寺或岳王庙，想比较交通和游客评价。');
+
+    expect(result).toMatchObject({
+      status: 'success',
+      origin: '杭州西湖',
+      candidates: ['灵隐寺', '岳王庙'],
+      cityHint: '杭州',
+    });
+  });
+
+  it('generates route-enhanced text with a lightweight comparison', async () => {
+    const result = await client.decideWithRoutes('我已经到了西湖，下午去灵隐寺或岳王庙。', {
+      originName: '西湖',
+      candidates: [
+        {
+          destinationName: '灵隐寺',
+          resolvedDestinationName: '灵隐寺',
+          routes: [{ mode: 'transit', durationMinutes: 25, available: true }],
+        },
+        {
+          destinationName: '岳王庙',
+          resolvedDestinationName: '岳王庙',
+          routes: [{ mode: 'transit', durationMinutes: 15, available: true }],
+        },
+      ],
+    });
+
+    expect(result.status).toBe('success');
+    expect(result.message).toContain('路线对比');
+    expect(result.message).toContain('我的建议');
+  });
+
+  it('makes map fallback explicit', async () => {
+    const result = await client.decideWithoutMapData('我已经到了西湖，下午去灵隐寺或岳王庙。', '暂时无法获取地图导航数据。');
+
+    expect(result.status).toBe('success');
+    expect(result.message).toContain('暂时没有获取到地图导航数据');
+  });
 });
