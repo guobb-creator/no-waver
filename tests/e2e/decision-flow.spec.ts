@@ -2,9 +2,11 @@ import { expect, test } from '@playwright/test';
 
 const successResponse = {
   status: 'success',
-  message: '路线对比：\n\n灵隐寺：公交/地铁约 25 分钟，驾车/打车约 12 分钟\n岳王庙：公交/地铁约 15 分钟，骑行约 10 分钟\n\n我的建议：请优先选择交通更顺路的目的地。',
+  message: '灵隐寺的优点是更经典，缺点是路上更久。\n岳王庙的优点是更顺路，缺点是游览体量较小。\n\n我的建议：请优先选择交通更顺路的目的地。',
   maxInputChars: 12000,
-  routeConfirmation: {
+  trafficSummary: {
+    source: '高德地图路线数据',
+    queriedAtText: '刚刚查询',
     origin: {
       name: '西湖',
       resolvedName: '杭州西湖',
@@ -16,19 +18,58 @@ const successResponse = {
         name: '灵隐寺',
         resolvedName: '灵隐寺',
         location: '120.100,30.240',
-        availableModes: ['transit', 'driving'],
+        routes: [
+          {
+            mode: 'transit',
+            label: '公交/地铁',
+            durationMinutes: 25,
+            durationText: '约 25 分钟',
+            distanceText: '约 5.2 公里',
+            lineNamesText: '7路',
+            walkingDistanceText: '步行约 680 米',
+            transfersText: '换乘 0 次',
+            verificationUrl: 'https://uri.amap.com/navigation?mode=bus&callnative=1',
+          },
+          {
+            mode: 'driving',
+            label: '驾车/打车',
+            durationMinutes: 12,
+            durationText: '约 12 分钟',
+            distanceText: '约 4.1 公里',
+            verificationUrl: 'https://uri.amap.com/navigation?mode=car&callnative=1',
+          },
+        ],
       },
       {
         id: 'candidate-1',
         name: '岳王庙',
         resolvedName: '岳王庙',
         location: '120.140,30.253',
-        availableModes: ['transit', 'cycling', 'walking'],
+        routes: [
+          {
+            mode: 'transit',
+            label: '公交/地铁',
+            durationMinutes: 15,
+            durationText: '约 15 分钟',
+            lineNamesText: '27路',
+            verificationUrl: 'https://uri.amap.com/navigation?mode=bus&callnative=1',
+          },
+          {
+            mode: 'cycling',
+            label: '骑行',
+            durationMinutes: 10,
+            durationText: '约 10 分钟',
+            verificationUrl: 'https://uri.amap.com/navigation?mode=ride&callnative=1',
+          },
+        ],
       },
     ],
-    defaultCandidateId: 'candidate-1',
-    defaultMode: 'transit',
-    notice: 'AI 建议基于本次高德路线数据生成；下方为高德路线页，实际导航以高德为准。',
+    trafficInsight: {
+      type: 'obvious',
+      title: '岳王庙明显更方便',
+      reasons: ['公交/地铁去岳王庙少 10 分钟', '骑行去岳王庙也更轻松'],
+    },
+    notice: '交通数据来自高德地图路线数据；AI 只基于这些路线数据比较交通。实际导航以高德为准。',
   },
 };
 
@@ -61,23 +102,16 @@ test('submits the editable default example and shows a plain-text reply', async 
   await page.getByRole('button', { name: '帮我做决定' }).click();
 
   await expect(page.getByRole('heading', { name: '给你的建议' })).toBeVisible();
-  await expect(page.getByText('路线对比', { exact: false })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '交通对比' })).toBeVisible();
+  await expect(page.getByText('数据来源：高德地图路线数据 · 刚刚查询')).toBeVisible();
+  await expect(page.getByText('步行约 680 米')).toBeVisible();
+  await expect(page.getByText('交通判断：岳王庙明显更方便')).toBeVisible();
+  await expect(page.getByRole('link', { name: '高德查看' }).first()).toHaveAttribute(
+    'href',
+    /uri\.amap\.com\/navigation/,
+  );
   await expect(page.getByText('交通更顺路', { exact: false })).toBeVisible();
-
-  if (testInfo.project.name === 'mobile-chrome') {
-    await expect(page.getByRole('heading', { name: '高德路线确认' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '查看高德路线' })).toBeVisible();
-    await page.getByRole('button', { name: '查看高德路线' }).click();
-    await expect(page.getByTitle('岳王庙公交/地铁高德路线')).toBeVisible();
-    await expect(page.getByRole('link', { name: '打开高德地图导航' })).toHaveAttribute(
-      'href',
-      /uri\.amap\.com\/navigation/,
-    );
-    await page.getByRole('button', { name: '灵隐寺' }).click();
-    await expect(page.getByTitle('灵隐寺公交/地铁高德路线')).toBeVisible();
-  } else {
-    await expect(page.getByRole('heading', { name: '高德路线确认' })).not.toBeVisible();
-  }
+  await expect(page.locator('iframe')).toHaveCount(0);
 });
 
 test('defaults to daily decisions and submits to the daily endpoint', async ({ page }) => {
@@ -116,7 +150,7 @@ test('defaults to daily decisions and submits to the daily endpoint', async ({ p
   await expect(page.getByText('今晚点外卖', { exact: false })).toBeVisible();
   expect(dailyRequestCount).toBe(1);
   expect(travelRequestCount).toBe(0);
-  await expect(page.getByRole('heading', { name: '高德路线确认' })).not.toBeVisible();
+  await expect(page.getByRole('heading', { name: '交通对比' })).not.toBeVisible();
 });
 
 test('preserves each category input and latest reply while switching', async ({ page }) => {

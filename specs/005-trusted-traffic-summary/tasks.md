@@ -44,31 +44,31 @@
 
 ### 阶段 B：交通摘要数据层
 
-- [ ] T003 新增 `traffic-summary` 类型。
+- [x] T003 新增 `traffic-summary` 类型。
   - 文件：`lib/traffic-summary/types.ts`
   - 内容：定义 `TrafficSummary`、`TrafficSummaryCandidate`、`TrafficRouteItem`、`TrafficInsight`。
   - 依赖：T002
   - 验证：API 和前端可复用类型。
 
-- [ ] T004 新增高德核验 URL 构造。
+- [x] T004 新增高德核验 URL 构造。
   - 文件：`lib/traffic-summary/amap-verification-url.ts`
   - 内容：生成 `uri.amap.com/navigation` 链接，支持公交/驾车/步行/骑行，`callnative=1`。
   - 依赖：T003
   - 验证：单测覆盖中文地名、坐标和 mode；每个候选目的地的每种可用交通方式都有独立链接。
 
-- [ ] T005 增强地图路线摘要字段。
+- [x] T005 增强地图路线摘要字段。
   - 文件：`lib/map-routing/types.ts`、`lib/map-routing/amap-client.ts`
   - 内容：补充公共交通线路名、换乘次数、步行距离；保留现有 duration/distance。
   - 依赖：T003
   - 验证：真实或 mock 数据可生成交通摘要。
 
-- [ ] T006 实现 `buildTrafficSummary`。
+- [x] T006 实现 `buildTrafficSummary`。
   - 文件：`lib/traffic-summary/build-traffic-summary.ts`
   - 内容：将 `RouteSummary` 转为前端展示用 `TrafficSummary`。
   - 依赖：T003、T004、T005
   - 验证：候选卡片、默认公共交通、步行规则正确。
 
-- [ ] T007 实现交通判断依据算法。
+- [x] T007 实现交通判断依据算法。
   - 文件：`lib/traffic-summary/traffic-insight.ts`
   - 内容：输出明显更方便、略微更方便、差异不大、数据不足四类判断。
   - 依赖：T006
@@ -76,19 +76,19 @@
 
 ### 阶段 C：API 与模型约束
 
-- [ ] T008 更新旅行 API 成功响应。
+- [x] T008 更新旅行 API 成功响应。
   - 文件：`app/api/decision/route.ts`
   - 内容：成功时返回 `trafficSummary`，停止返回或停止使用 `routeConfirmation`。
   - 依赖：T006、T007
   - 验证：路由测试覆盖 success。
 
-- [ ] T009 强化模型 prompt 交通事实约束。
+- [x] T009 强化模型 prompt 交通事实约束。
   - 文件：`lib/decision-model/siliconflow-client.ts`、`lib/decision-model/mock-client.ts`
   - 内容：明确模型只能引用高德路线摘要中的交通数字。
   - 依赖：T006
   - 验证：测试断言 prompt 或 mock 输出不编造路线数据。
 
-- [ ] T010 更新地图异常处理。
+- [x] T010 更新地图异常处理。
   - 文件：`app/api/decision/route.ts`、`lib/place-sanity.ts`、`lib/map-routing/*`
   - 内容：占位符、地点不可识别、不在同城、距离过远、任一候选地点导航失败或关键路线缺失时返回补充提示。
   - 依赖：T008
@@ -96,25 +96,25 @@
 
 ### 阶段 D：前端展示
 
-- [ ] T011 新增 `TrafficSummaryCard` 组件。
+- [x] T011 新增 `TrafficSummaryCard` 组件。
   - 文件：`components/TrafficSummaryCard.tsx`
   - 内容：展示数据来源、候选卡片、路线项、公共交通线路名、交通判断、每种交通方式的高德核验链接。
   - 依赖：T003
   - 验证：组件测试覆盖核心渲染。
 
-- [ ] T012 替换旅行结果中的内嵌高德组件。
+- [x] T012 替换旅行结果中的内嵌高德组件。
   - 文件：`app/page.tsx`
   - 内容：旅行成功且有 `trafficSummary` 时展示 `TrafficSummaryCard`；不再渲染 `AmapRouteConfirmation`。
   - 依赖：T008、T011
   - 验证：页面不出现 iframe。
 
-- [ ] T013 更新样式。
+- [x] T013 更新样式。
   - 文件：`app/globals.css`
   - 内容：移动端友好的交通卡片、路线行、来源说明、判断依据、高德链接按钮。
   - 依赖：T011
   - 验证：手机视口无横向滚动，信息层级清晰。
 
-- [ ] T014 处理旧内嵌代码。
+- [x] T014 处理旧内嵌代码。
   - 文件：`components/AmapRouteConfirmation.tsx`、`lib/route-confirmation/*`
   - 内容：删除旧内嵌高德组件、route-confirmation 相关工具与测试引用。
   - 依赖：T012
@@ -122,25 +122,25 @@
 
 ### 阶段 E：测试与上线
 
-- [ ] T015 补充单元测试。
+- [x] T015 补充单元测试。
   - 文件：`tests/unit/*`
   - 内容：traffic summary、traffic insight、URL 构造、异常策略。
   - 依赖：T006、T007、T010
   - 验证：`npm test -- --run` 通过。
 
-- [ ] T016 更新组件测试。
+- [x] T016 更新组件测试。
   - 文件：`tests/unit/components.test.tsx`
   - 内容：交通摘要卡片、来源说明、判断依据、高德链接、不渲染 iframe。
   - 依赖：T011、T012
   - 验证：组件测试通过。
 
-- [ ] T017 更新 E2E 测试。
+- [x] T017 更新 E2E 测试。
   - 文件：`tests/e2e/decision-flow.spec.ts`
   - 内容：旅行成功展示交通对比；不展示高德 iframe；高德核验链接存在；日常不展示。
   - 依赖：T012、T013
   - 验证：`npm run test:e2e` 通过。
 
-- [ ] T018 执行本地完整验证。
+- [x] T018 执行本地完整验证。
   - 文件：无
   - 内容：运行 lint、单元测试、构建、E2E。
   - 依赖：T015、T016、T017
@@ -207,5 +207,8 @@ T011 + T012 → T016 → T017 → T018 → T019 → T020 → T021
 | 日期 | 项目 | 结果 |
 | --- | --- | --- |
 | 2026-07-20 | 用户确认产品决策 | 已确认：地点导航有一个失败即提示核实地点；每种交通方式提供高德核验链接；交通摘要在 AI 建议前；展示公共交通线路名；删除旧 iframe 代码 |
-| 待执行 | 本地完整验证 | 待执行 |
+| 2026-07-20 | `npm run lint` | 通过 |
+| 2026-07-20 | `npm test -- --run` | 通过，10 个测试文件、49 个测试用例 |
+| 2026-07-20 | `npm run build` | 通过 |
+| 2026-07-20 | `npm run test:e2e` | 通过，Chromium 与 mobile-chrome 共 12 个用例 |
 | 待执行 | 线上冒烟测试 | 待执行 |

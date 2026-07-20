@@ -55,7 +55,19 @@ type AmapRouteResponse = {
   count?: string;
   route?: {
     paths?: Array<{ distance?: string; duration?: string }>;
-    transits?: Array<{ distance?: string; duration?: string }>;
+    transits?: Array<{
+      distance?: string;
+      duration?: string;
+      walking_distance?: string;
+      segments?: Array<{
+        walking?: { distance?: string };
+        bus?: {
+          buslines?: Array<{
+            name?: string;
+          }>;
+        };
+      }>;
+    }>;
   };
 };
 
@@ -101,8 +113,11 @@ export class AmapMapRoutingClient implements MapRoutingClient {
         ],
       );
 
-      if (summaries.every((summary) => summary.routes.every((route) => !route.available))) {
-        return { status: 'unavailable', message: '暂时无法获取地图导航数据。' };
+      if (summaries.some((summary) => summary.routes.every((route) => !route.available))) {
+        return {
+          status: 'needs_clarification',
+          message: '有一个目的地暂时无法获取可靠的地图导航路线。请核实地点名称是否有误，或补充城市/区域后再试。',
+        };
       }
 
       return {
@@ -231,7 +246,7 @@ export class AmapMapRoutingClient implements MapRoutingClient {
       if (data.status !== '1') throw new AmapUnavailableError(data.info || 'Transit route failed');
 
       const first = data.route?.transits?.[0];
-      return toRouteOption('transit', first?.duration, first?.distance);
+      return toTransitRouteOption(first);
     } catch {
       return unavailableRoute('transit', '地图未返回有效公交/地铁路线');
     }
@@ -330,7 +345,11 @@ function normalizeAmapString(value: string | string[] | undefined): string | und
   return value || undefined;
 }
 
-function toRouteOption(mode: TravelMode, durationSeconds: string | number | undefined, distanceMeters?: string | number): RouteOption {
+function toRouteOption(
+  mode: TravelMode,
+  durationSeconds: string | number | undefined,
+  distanceMeters?: string | number,
+): RouteOption {
   const seconds = Number(durationSeconds);
   if (!Number.isFinite(seconds) || seconds <= 0) return unavailableRoute(mode);
 
@@ -341,6 +360,48 @@ function toRouteOption(mode: TravelMode, durationSeconds: string | number | unde
     distanceMeters: Number.isFinite(distance) && distance > 0 ? Math.round(distance) : undefined,
     available: true,
   };
+}
+
+function toTransitRouteOption(transit: NonNullable<NonNullable<AmapRouteResponse['route']>['transits']>[number] | undefined): RouteOption {
+  const base = toRouteOption('transit', transit?.duration, transit?.distance);
+  if (!base.available) return base;
+
+  const walkingDistance = Number(transit?.walking_distance);
+  const lineNames = extractLineNames(transit);
+
+  return {
+    ...base,
+    walkingDistanceMeters:
+      Number.isFinite(walkingDistance) && walkingDistance > 0
+        ? Math.round(walkingDistance)
+        : extractWalkingDistance(transit),
+    transfers: Math.max(0, lineNames.length - 1),
+    lineNames,
+  };
+}
+
+function extractLineNames(transit: NonNullable<NonNullable<AmapRouteResponse['route']>['transits']>[number] | undefined): string[] {
+  const names = new Set<string>();
+
+  for (const segment of transit?.segments || []) {
+    for (const busline of segment.bus?.buslines || []) {
+      const name = busline.name?.split('(')[0]?.trim();
+      if (name) names.add(name);
+    }
+  }
+
+  return Array.from(names).slice(0, 4);
+}
+
+function extractWalkingDistance(
+  transit: NonNullable<NonNullable<AmapRouteResponse['route']>['transits']>[number] | undefined,
+): number | undefined {
+  const total = (transit?.segments || []).reduce((sum, segment) => {
+    const distance = Number(segment.walking?.distance);
+    return Number.isFinite(distance) && distance > 0 ? sum + distance : sum;
+  }, 0);
+
+  return total > 0 ? Math.round(total) : undefined;
 }
 
 function unavailableRoute(mode: TravelMode, note?: string): RouteOption {

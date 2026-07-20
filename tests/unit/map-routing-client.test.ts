@@ -63,7 +63,22 @@ describe('map routing clients', () => {
       }
 
       if (url.includes('/v3/direction/transit/integrated')) {
-        return jsonResponse({ status: '1', route: { transits: [{ duration: '1800', distance: '5500' }] } });
+        return jsonResponse({
+          status: '1',
+          route: {
+            transits: [
+              {
+                duration: '1800',
+                distance: '5500',
+                walking_distance: '700',
+                segments: [
+                  { walking: { distance: '300' }, bus: { buslines: [{ name: '7路(灵隐方向)' }] } },
+                  { walking: { distance: '400' }, bus: { buslines: [{ name: '地铁1号线(萧山机场方向)' }] } },
+                ],
+              },
+            ],
+          },
+        });
       }
 
       return jsonResponse({ status: '1', route: { paths: [{ duration: '900', distance: '4200' }] } });
@@ -85,7 +100,14 @@ describe('map routing clients', () => {
     if (result.status === 'success') {
       expect(result.summary.candidates[0].routes).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ mode: 'transit', durationMinutes: 30, available: true }),
+          expect.objectContaining({
+            mode: 'transit',
+            durationMinutes: 30,
+            walkingDistanceMeters: 700,
+            transfers: 1,
+            lineNames: ['7路', '地铁1号线'],
+            available: true,
+          }),
           expect.objectContaining({ mode: 'driving', durationMinutes: 15, available: true }),
           expect.objectContaining({ mode: 'cycling', durationMinutes: 20, available: true }),
           expect.objectContaining({ mode: 'walking', durationMinutes: 15, available: true }),

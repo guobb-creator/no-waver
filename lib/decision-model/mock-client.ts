@@ -1,5 +1,4 @@
 import { MAX_INPUT_CHARS } from '@/lib/app-config';
-import { formatRouteSummaryForPrompt } from '@/lib/map-routing/route-summary';
 import type { RouteSummary } from '@/lib/map-routing/types';
 import type { DecisionModelClient, DecisionResult, ExtractedTripPlaces } from './types';
 
@@ -71,8 +70,6 @@ export class MockDecisionModelClient implements DecisionModelClient {
     return {
       status: 'success',
       message: [
-        formatRouteSummaryForPrompt(routeSummary),
-        '',
         `${routeSummary.candidates[0].destinationName} 的优点是路程更短、下午安排更轻松；缺点是景点体验可能没那么完整。`,
         `${routeSummary.candidates[1].destinationName} 的优点是游客评价和经典程度通常更强；缺点是路上时间更长，返程压力更大。`,
         '',

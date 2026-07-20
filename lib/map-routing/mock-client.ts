@@ -32,7 +32,15 @@ export class MockMapRoutingClient implements MapRoutingClient {
             location: '120.100,30.240',
             city: input.cityHint,
             routes: [
-              { mode: 'transit', durationMinutes: 25, distanceMeters: 5200, available: true },
+              {
+                mode: 'transit',
+                durationMinutes: 25,
+                distanceMeters: 5200,
+                walkingDistanceMeters: 680,
+                transfers: 0,
+                lineNames: ['7路'],
+                available: true,
+              },
               { mode: 'driving', durationMinutes: 12, distanceMeters: 4100, available: true },
               { mode: 'cycling', durationMinutes: 18, distanceMeters: 4300, available: true },
               { mode: 'walking', durationMinutes: 42, distanceMeters: 3600, available: true },
@@ -44,7 +52,15 @@ export class MockMapRoutingClient implements MapRoutingClient {
             location: '120.140,30.253',
             city: input.cityHint,
             routes: [
-              { mode: 'transit', durationMinutes: 45, distanceMeters: 9800, available: true },
+              {
+                mode: 'transit',
+                durationMinutes: 45,
+                distanceMeters: 9800,
+                walkingDistanceMeters: 1100,
+                transfers: 1,
+                lineNames: ['7路', '地铁1号线'],
+                available: true,
+              },
               { mode: 'driving', durationMinutes: 28, distanceMeters: 8700, available: true },
               { mode: 'cycling', durationMinutes: 35, distanceMeters: 8900, available: true },
               { mode: 'walking', durationMinutes: 96, distanceMeters: 7900, available: true },

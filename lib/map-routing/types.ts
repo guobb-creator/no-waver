@@ -4,6 +4,9 @@ export type RouteOption = {
   mode: TravelMode;
   durationMinutes: number;
   distanceMeters?: number;
+  walkingDistanceMeters?: number;
+  transfers?: number;
+  lineNames?: string[];
   available: boolean;
   note?: string;
 };

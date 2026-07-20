@@ -58,7 +58,7 @@ describe('MockDecisionModelClient', () => {
     });
   });
 
-  it('generates route-enhanced text with a lightweight comparison', async () => {
+  it('generates route-enhanced advice without repeating the structured traffic card', async () => {
     const result = await client.decideWithRoutes('我已经到了西湖，下午去灵隐寺或岳王庙。', {
       originName: '西湖',
       candidates: [
@@ -76,7 +76,7 @@ describe('MockDecisionModelClient', () => {
     });
 
     expect(result.status).toBe('success');
-    expect(result.message).toContain('路线对比');
+    expect(result.message).not.toContain('路线对比');
     expect(result.message).toContain('我的建议');
   });
 

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { AmapRouteConfirmation } from '@/components/AmapRouteConfirmation';
 import { DecisionForm } from '@/components/DecisionForm';
 import { DecisionResponse } from '@/components/DecisionResponse';
+import { TrafficSummaryCard } from '@/components/TrafficSummaryCard';
 import { MAX_INPUT_CHARS } from '@/lib/app-config';
-import type { RouteConfirmation } from '@/lib/route-confirmation/types';
+import type { TrafficSummary } from '@/lib/traffic-summary/types';
 
 type DecisionCategory = 'daily' | 'travel';
 
@@ -24,7 +24,7 @@ type CategoryState = {
   question: string;
   status: PageStatus;
   message: string;
-  routeConfirmation?: RouteConfirmation;
+  trafficSummary?: TrafficSummary;
 };
 
 const categoryConfigs = {
@@ -68,7 +68,7 @@ type DecisionApiResponse = {
   status: Exclude<PageStatus, 'idle' | 'loading'>;
   message: string;
   maxInputChars: number;
-  routeConfirmation?: RouteConfirmation;
+  trafficSummary?: TrafficSummary;
 };
 
 export default function Home() {
@@ -93,7 +93,7 @@ export default function Home() {
     const submittedConfig = categoryConfigs[submittedCategory];
     const submittedQuestion = categoryStates[submittedCategory].question;
 
-    updateCategoryState(submittedCategory, { status: 'loading', message: '', routeConfirmation: undefined });
+    updateCategoryState(submittedCategory, { status: 'loading', message: '', trafficSummary: undefined });
 
     try {
       const response = await fetch(submittedConfig.endpoint, {
@@ -115,7 +115,7 @@ export default function Home() {
       updateCategoryState(submittedCategory, {
         status: data.status,
         message: data.message,
-        routeConfirmation: submittedCategory === 'travel' ? data.routeConfirmation : undefined,
+        trafficSummary: submittedCategory === 'travel' ? data.trafficSummary : undefined,
       });
     } catch {
       updateCategoryState(submittedCategory, { status: 'error', message: '网络连接异常，请检查网络后重试。' });
@@ -158,13 +158,13 @@ export default function Home() {
       />
 
       {activeState.status === 'loading' && <p className="loading" aria-live="polite">{activeConfig.loadingText}</p>}
+      {activeCategory === 'travel' && activeState.status === 'success' && activeState.trafficSummary && (
+        <TrafficSummaryCard summary={activeState.trafficSummary} />
+      )}
       {(activeState.status === 'success' ||
         activeState.status === 'needs_clarification' ||
         activeState.status === 'error') && (
         <DecisionResponse kind={activeState.status} message={activeState.message} />
-      )}
-      {activeCategory === 'travel' && activeState.status === 'success' && activeState.routeConfirmation && (
-        <AmapRouteConfirmation data={activeState.routeConfirmation} />
       )}
     </main>
   );

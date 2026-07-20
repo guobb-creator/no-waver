@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDecisionModelClient } from '@/lib/decision-model/client-factory';
 import { getMapRoutingClient } from '@/lib/map-routing/client-factory';
 import { validateExtractedPlaces, validateQuestionPlaceholders } from '@/lib/place-sanity';
-import { buildRouteConfirmation } from '@/lib/route-confirmation/build-route-confirmation';
+import { buildTrafficSummary } from '@/lib/traffic-summary/build-traffic-summary';
 import { validateQuestion } from '@/lib/validation';
 
 export const runtime = 'nodejs';
@@ -69,16 +69,28 @@ export async function POST(request: Request) {
     }
 
     if (routeResult.status === 'success') {
+      const trafficSummary = buildTrafficSummary(routeResult.summary);
+      if (!trafficSummary) {
+        return NextResponse.json({
+          status: 'needs_clarification',
+          message: '有一个目的地暂时无法获取可靠的地图导航路线。请核实地点名称是否有误，或补充城市/区域后再试。',
+          maxInputChars: client.maxInputChars,
+        });
+      }
+
       const result = await client.decideWithRoutes(validation.question, routeResult.summary);
       return NextResponse.json({
         ...result,
-        routeConfirmation: buildRouteConfirmation(routeResult.summary),
+        trafficSummary,
         maxInputChars: client.maxInputChars,
       });
     }
 
-    const result = await client.decideWithoutMapData(validation.question, routeResult.message);
-    return NextResponse.json({ ...result, maxInputChars: client.maxInputChars });
+    return NextResponse.json({
+      status: 'needs_clarification',
+      message: `${routeResult.message} 请核实地点名称是否有误，或补充城市/区域后再试。`,
+      maxInputChars: client.maxInputChars,
+    });
   } catch {
     return NextResponse.json(
       {

@@ -49,7 +49,15 @@ export function formatCandidateRouteLine(
     return `${name}：地图暂未返回可用路线`;
   }
 
-  const parts = routes.map((route) => `${modeLabels[route.mode]}${formatDuration(route.durationMinutes)}`);
+  const parts = routes.map((route) => {
+    const details = [
+      `${modeLabels[route.mode]}${formatDuration(route.durationMinutes)}`,
+      route.lineNames?.length ? route.lineNames.join(' / ') : undefined,
+      typeof route.walkingDistanceMeters === 'number' ? `步行约 ${route.walkingDistanceMeters} 米` : undefined,
+      typeof route.transfers === 'number' ? `换乘 ${route.transfers} 次` : undefined,
+    ].filter(Boolean);
+    return details.join('，');
+  });
   if (hasLongWalkingRoute(candidate.routes, walkingMaxMinutes)) {
     parts.push('步行时间较长，不建议步行');
   }
