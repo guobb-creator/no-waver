@@ -6,9 +6,9 @@
 | --- | --- |
 | 对应规格 | `004-embedded-amap-route-confirmation/spec.md` |
 | 对应方案 | `004-embedded-amap-route-confirmation/plan.md` |
-| 版本 | 0.1（待确认） |
+| 版本 | 0.2（已确认产品决策，待 iframe 可行性验证） |
 | 阶段 | Tasks |
-| 状态 | 草案，待确认 |
+| 状态 | 已确认产品方向，待实现前可行性验证 |
 
 ## 2. 实施约束
 
@@ -17,61 +17,64 @@
 - 前端不暴露高德 Web Service Key。
 - AI 建议和内嵌高德页面尽量使用同一组高德坐标。
 - 页面必须说明实际导航以高德为准。
-- iframe 不可用时必须有 fallback。
+- 内嵌区默认折叠。
+- 默认交通方式为公共交通。
+- 不展示置信度。
+- 不接受降级实现；若 iframe 无法稳定内嵌，则停止实现并重新讨论。
 - 不接入小红书。
 - 不保存用户输入、路线或导航记录。
 
 ## 3. 任务清单
 
-### 阶段 A：确认与响应契约
+### 阶段 A：确认与可行性验证
 
-- [ ] T001 确认产品待定项。
+- [x] T001 确认产品待定项。
   - 文件：`specs/004-embedded-amap-route-confirmation/spec.md`
-  - 内容：确认默认展开/折叠、默认交通方式、iframe fallback、置信度、移动端高度。
+  - 内容：确认默认折叠、默认公共交通、不接受降级、不展示置信度、移动端高度约 560px。
   - 验证：规格验收清单全部勾选。
 
-- [ ] T002 定义 `RouteConfirmation` 类型。
-  - 文件：建议 `lib/route-confirmation/types.ts`
-  - 内容：定义 origin、candidates、availableModes、defaultCandidateId、defaultMode、confidence、notice。
+- [ ] T002 完成高德 iframe 可行性 spike。
+  - 文件：可使用临时本地页面或临时分支，不进入正式功能代码。
+  - 内容：用高德 URI `navigation` 的真实 URL 在 iframe 中测试公共交通路线页；验证本地预览、线上预览、手机浏览器体验。
   - 依赖：T001
+  - 验证：能稳定加载高德路线页后才进入后续实现；若失败，停止本规格实现。
+
+### 阶段 B：响应契约与后端路线确认数据
+
+- [ ] T003 定义 `RouteConfirmation` 类型。
+  - 文件：建议 `lib/route-confirmation/types.ts`
+  - 内容：定义 origin、candidates、availableModes、defaultCandidateId、defaultMode、notice。
+  - 依赖：T002
   - 验证：TypeScript 类型可被 API 和前端复用。
 
-- [ ] T003 扩展旅行 API 响应类型。
+- [ ] T004 扩展旅行 API 响应类型。
   - 文件：`app/page.tsx` 或独立共享类型文件
   - 内容：`DecisionApiResponse` 增加可选 `routeConfirmation`。
-  - 依赖：T002
+  - 依赖：T003
   - 验证：日常响应不受影响，旅行旧字段保持兼容。
 
-### 阶段 B：后端路线确认数据
-
-- [ ] T004 扩展地图路线内部数据，保留高德坐标。
+- [ ] T005 扩展地图路线内部数据，保留高德坐标。
   - 文件：`lib/map-routing/types.ts`、`lib/map-routing/amap-client.ts`
   - 内容：RouteSummary 或 CandidateRouteSummary 增加起终点 location。
-  - 依赖：T002
+  - 依赖：T003
   - 验证：不返回原始高德 JSON，不暴露 Key。
 
-- [ ] T005 实现可用交通方式提取。
+- [ ] T006 实现可用交通方式提取。
   - 文件：建议 `lib/route-confirmation/build-route-confirmation.ts`
   - 内容：从 RouteSummary 中整理每个候选目的地的 `availableModes`。
-  - 依赖：T004
+  - 依赖：T005
   - 验证：不可用交通方式不进入按钮列表。
 
-- [ ] T006 实现默认目的地和默认交通方式选择。
+- [ ] T007 实现默认目的地和默认交通方式选择。
   - 文件：建议 `lib/route-confirmation/build-route-confirmation.ts`
-  - 内容：按确认后的规则选择 `defaultCandidateId` 和 `defaultMode`。
-  - 依赖：T005
+  - 内容：默认目的地按路线综合更优或第一个候选；默认交通方式优先公共交通，公共交通不可用时选择下一可用方式。
+  - 依赖：T006
   - 验证：有公交优先公交；公交不可用时选择下一可用方式。
-
-- [ ] T007 实现置信度计算。
-  - 文件：建议 `lib/route-confirmation/confidence.ts`
-  - 内容：根据路线完整度和时间差异生成 high/medium/low 与原因。
-  - 依赖：T005
-  - 验证：单测覆盖三种等级。
 
 - [ ] T008 在 `/api/decision` 成功响应中返回 `routeConfirmation`。
   - 文件：`app/api/decision/route.ts`
   - 内容：仅在地图路线成功时返回；地图失败降级时不返回。
-  - 依赖：T004、T005、T006、T007
+  - 依赖：T005、T006、T007
   - 验证：路由测试覆盖 success/clarification/fallback。
 
 ### 阶段 C：高德 URL 与前端组件
@@ -79,38 +82,38 @@
 - [ ] T009 实现高德 URI URL 构造。
   - 文件：建议 `lib/route-confirmation/amap-uri.ts`
   - 内容：生成 iframe URL 和打开导航 URL；正确编码坐标、名称、交通方式、`callnative`。
-  - 依赖：T002
+  - 依赖：T003
   - 验证：单测覆盖各交通方式和中文地名。
 
 - [ ] T010 新增 `AmapRouteConfirmation` 组件。
   - 文件：`components/AmapRouteConfirmation.tsx`
-  - 内容：展示标题、说明、置信度、目的地 tabs、交通方式 tabs、iframe、打开高德按钮。
-  - 依赖：T002、T009
-  - 验证：组件测试覆盖渲染与切换。
+  - 内容：默认折叠；展开后展示标题、说明、目的地 tabs、交通方式 tabs、iframe、打开高德按钮。
+  - 依赖：T003、T009
+  - 验证：组件测试覆盖渲染、展开与切换。
 
-- [ ] T011 实现 iframe 加载与 fallback。
+- [ ] T011 实现 iframe 运行时异常提示。
   - 文件：`components/AmapRouteConfirmation.tsx`
-  - 内容：加载状态、超时提示、保留打开高德按钮。
+  - 内容：加载状态、超时提示、重试入口；该提示仅处理网络/运行时异常，不作为产品降级方案。
   - 依赖：T010
-  - 验证：测试模拟超时后显示 fallback。
+  - 验证：测试模拟超时后显示重试提示。
 
 - [ ] T012 接入旅行结果页。
   - 文件：`app/page.tsx`
   - 内容：旅行成功且有 `routeConfirmation` 时渲染确认区；日常不展示。
-  - 依赖：T003、T010、T011
+  - 依赖：T004、T010、T011
   - 验证：切换日常/旅行时不会串状态。
 
 ### 阶段 D：样式与移动端
 
 - [ ] T013 添加路线确认区样式。
   - 文件：`app/globals.css`
-  - 内容：卡片、tabs、iframe、按钮、fallback、移动端高度。
+  - 内容：折叠卡片、tabs、iframe、按钮、运行时异常提示、移动端高度约 560px。
   - 依赖：T010
   - 验证：手机视口无横向滚动。
 
 - [ ] T014 优化可访问性。
   - 文件：`components/AmapRouteConfirmation.tsx`
-  - 内容：tabs/button aria 状态；iframe title；外链按钮可读。
+  - 内容：展开按钮、tabs/button aria 状态；iframe title；外链按钮可读。
   - 依赖：T010
   - 验证：Playwright 可通过 role/name 定位核心控件。
 
@@ -118,7 +121,7 @@
 
 - [ ] T015 补充单元测试。
   - 文件：`tests/unit/*`
-  - 内容：类型构造、置信度、URL 构造、组件切换、fallback。
+  - 内容：类型构造、URL 构造、默认公共交通、组件折叠/展开、组件切换、运行时异常提示。
   - 依赖：T007、T009、T011
   - 验证：`npm test -- --run` 通过。
 
@@ -130,7 +133,7 @@
 
 - [ ] T017 更新 E2E 测试。
   - 文件：`tests/e2e/decision-flow.spec.ts`
-  - 内容：旅行结果展示高德确认区、切换目的地/交通方式、打开高德链接、日常不展示。
+  - 内容：旅行结果展示折叠的高德确认区、展开 iframe、切换目的地/交通方式、打开高德链接、日常不展示。
   - 依赖：T012、T013、T014
   - 验证：`npm run test:e2e` 通过。
 
@@ -148,19 +151,18 @@
 
 - [ ] T020 更新 SDD 验收记录。
   - 文件：`specs/004-embedded-amap-route-confirmation/tasks.md`
-  - 内容：记录本地验证、线上冒烟、已知限制。
+  - 内容：记录 iframe spike、本地验证、线上冒烟、已知限制。
   - 依赖：T019
   - 验证：任务清单与实际结果一致。
 
 ## 4. 依赖关系
 
 ```text
-T001 → T002 → T003
-T002 → T004 → T005 → T006
-T005 → T007
-T004 + T006 + T007 → T008
-T002 → T009 → T010 → T011
-T003 + T008 + T011 → T012
+T001 → T002
+T002 → T003 → T004
+T003 → T005 → T006 → T007 → T008
+T003 → T009 → T010 → T011
+T004 + T008 + T011 → T012
 T010 → T013 → T014
 T007 + T009 + T011 → T015
 T008 → T016
@@ -171,25 +173,28 @@ T012 + T013 + T014 → T017 → T018 → T019 → T020
 
 | 规格项 | 主要任务 | 通过条件 |
 | --- | --- | --- |
-| 内嵌高德路线页 | T009、T010、T012、T017 | 旅行成功结果展示高德路线确认区。 |
+| 可嵌入性先验验证 | T002 | 真实浏览器 iframe 可稳定加载高德路线页。 |
+| 内嵌高德路线页 | T009、T010、T012、T017 | 旅行成功结果展示默认折叠的高德路线确认区，展开后显示 iframe。 |
 | 一键跳转高德导航 | T009、T010、T017 | 按钮链接使用当前目的地和交通方式。 |
-| 同坐标一致性策略 | T004、T008、T009 | AI 结论和高德链接均基于同一组高德坐标。 |
+| 同坐标一致性策略 | T005、T008、T009 | AI 结论和高德链接均基于同一组高德坐标。 |
 | 差异说明 | T010、T014 | 页面明确“实际导航以高德为准”。 |
-| iframe fallback | T011、T017 | iframe 不可用时仍能打开高德。 |
-| 置信度 | T007、T010、T015 | 展示 high/medium/low 和原因。 |
+| 默认公共交通 | T007、T009、T017 | 默认 mode 为公共交通，公共交通不可用时才选择下一可用方式。 |
+| 不展示置信度 | T010、T017 | 页面不出现置信度等级或百分比。 |
 | 不影响日常 | T012、T017 | 日常模块不展示路线确认区。 |
 
 ## 6. 实现完成定义
 
 只有在 T001–T020 完成且以下条件全部满足时，才可标记为“已实现”：
 
-- 用户在旅行结果中看到 AI 建议和高德路线确认区；
+- 高德路线页 iframe 可行性已验证通过；
+- 用户在旅行结果中看到 AI 建议和默认折叠的高德路线确认区；
+- 用户可展开内嵌高德路线；
 - 用户可切换两个候选目的地；
 - 用户可切换可用交通方式；
-- 内嵌区使用高德 URI/H5 路线页；
+- 默认交通方式为公共交通；
 - 用户可点击打开高德地图导航；
 - 页面说明实际导航以高德为准；
-- iframe 不可用时有 fallback；
+- 不展示置信度；
 - 日常模块不受影响；
 - 前端不暴露高德 Web Service Key；
 - 不接入小红书；
@@ -200,7 +205,8 @@ T012 + T013 + T014 → T017 → T018 → T019 → T020
 
 | 日期 | 项目 | 结果 |
 | --- | --- | --- |
-| 待执行 | 用户确认待定项 | 待执行 |
+| 2026-07-20 | 用户确认待定项 | 已确认：默认折叠、公共交通、不接受降级、不展示置信度、移动端高度约 560px |
+| 待执行 | 高德 iframe 可行性 spike | 待执行 |
 | 待执行 | `npm run lint` | 待执行 |
 | 待执行 | `npm test -- --run` | 待执行 |
 | 待执行 | `npm run build` | 待执行 |
