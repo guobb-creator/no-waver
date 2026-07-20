@@ -7,10 +7,10 @@
 | 产品名称 | 不再摇摆 |
 | 规格编号 | `005-trusted-traffic-summary` |
 | 关联规格 | `001-mvp-decision-loop`、`002-distance-aware-decision`、`003-daily-decision`、`004-embedded-amap-route-confirmation` |
-| 版本 | 0.2（已确认） |
+| 版本 | 0.3（已实现并完成验收） |
 | 产品形态 | Web，优先适配手机端浏览器 |
 | 目标阶段 | MVP 增量 |
-| 状态 | 已确认，待实现 |
+| 状态 | 已实现并通过验收 |
 
 ## 2. 背景与目标
 
