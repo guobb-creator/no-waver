@@ -5,9 +5,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 对应规格 | `005-trusted-traffic-summary/spec.md` |
-| 版本 | 0.1（待确认） |
+| 版本 | 0.2（已确认） |
 | 阶段 | Plan |
-| 状态 | 草案，待用户确认 |
+| 状态 | 已确认，待实现 |
 
 ## 2. 技术目标
 
@@ -75,11 +75,12 @@
             "distanceText": "约 7.8 公里",
             "walkingDistanceText": "步行约 900 米",
             "transfersText": "换乘 0 次",
+            "lineNames": ["7 路", "地铁 1 号线"],
+            "lineNamesText": "7 路 / 地铁 1 号线",
             "available": true,
             "verificationUrl": "https://uri.amap.com/navigation?..."
           }
-        ],
-        "defaultVerificationUrl": "https://uri.amap.com/navigation?..."
+        ]
       }
     ],
     "trafficInsight": {
@@ -130,6 +131,8 @@ type TrafficRouteItem = {
   walkingDistanceText?: string;
   transfers?: number;
   transfersText?: string;
+  lineNames?: string[];
+  lineNamesText?: string;
   note?: string;
   verificationUrl: string;
 };
@@ -140,7 +143,6 @@ type TrafficSummaryCandidate = {
   resolvedName?: string;
   location: string;
   routes: TrafficRouteItem[];
-  defaultVerificationUrl: string;
 };
 
 type TrafficInsight = {
@@ -164,15 +166,15 @@ type TrafficInsight = {
 
 - `walkingDistanceMeters`
 - `transfers`
-- 可选 `lineNames`
+- `lineNames`
 
 高德公交接口如能稳定解析线路和换乘信息，则展示：
 
 ```text
-公交/地铁：约 38 分钟，步行约 900 米，换乘 0 次
+公交/地铁：约 38 分钟，7 路 / 地铁 1 号线，步行约 900 米，换乘 0 次
 ```
 
-如果本期不解析具体线路名，先不展示线路名，避免信息过载。
+如果同一公交方案包含多条线路，只展示高德推荐方案中的主要线路名，避免信息过载。
 
 ## 6. 交通判断算法
 
@@ -247,10 +249,12 @@ reasons:
 
 [候选目的地 A 卡片]
   公交/地铁  约 38 分钟  步行约 900 米  换乘 0 次
+    7 路 / 地铁 1 号线  [高德查看]
   驾车/打车  约 22 分钟  约 7.8 公里
+    [高德查看]
   骑行      约 34 分钟
+    [高德查看]
   步行      时间较长，不建议步行
-  [在高德中查看路线]
 
 [候选目的地 B 卡片]
 ...
@@ -274,7 +278,7 @@ reasons:
 - AI 建议变成对数据的解释，而不是一段无法核验的文本；
 - 更符合“降低模型幻觉担忧”的目标。
 
-该点需用户确认。
+该顺序已确认。
 
 ## 9. 异常策略
 
@@ -287,10 +291,10 @@ reasons:
 | 输入占位符 A/B/C | `needs_clarification` | 请把 A/B/C 换成真实地点 |
 | 地点无法识别 | `needs_clarification` | 请补充城市或更完整地点 |
 | 不在同城/距离过远 | `needs_clarification` | 请确认地点是否有误 |
-| 高德路线关键数据为空 | `needs_clarification` 或 `error` | 暂时无法可靠获取路线，请稍后重试或补充地点 |
+| 任一候选地点导航失败或关键路线数据为空 | `needs_clarification` | 有地点路线无法可靠获取，请核实地点是否有误 |
 | 非关键交通方式缺失 | `success` | 不展示缺失方式或显示“高德暂未返回有效路线” |
 
-待确认：高德整体失败时是否允许模型只基于游客评价生成建议。
+已确认：任一候选地点导航失败时，提示用户核实地点，不生成完整旅行决策建议。
 
 ## 10. 测试策略
 
@@ -313,13 +317,14 @@ reasons:
   - 坐标和中文名称正确编码；
   - 公交/驾车/步行/骑行 mode 正确；
   - `callnative=1`。
+  - 每个候选目的地的每种可用交通方式都有独立链接。
 
 ### 10.2 路由测试
 
 - 成功时返回 `trafficSummary`；
 - 占位符输入返回 `needs_clarification`；
 - 地点异常返回 `needs_clarification`；
-- 地图失败不返回具体交通数字。
+- 任一候选地点导航失败时返回 `needs_clarification`，不返回具体交通数字。
 
 ### 10.3 E2E 测试
 
@@ -327,22 +332,20 @@ reasons:
 - 展示高德数据来源；
 - 不展示高德 iframe；
 - 可看到两个候选目的地卡片；
-- 可点击高德核验链接；
+- 每种可用交通方式均可点击高德核验链接；
 - 日常模块不展示交通摘要。
 
 ## 11. 上线与迁移
 
 1. 新增 `trafficSummary` 响应。
 2. 前端优先使用 `trafficSummary` 渲染交通摘要。
-3. 移除或停止渲染 `routeConfirmation`。
-4. 确认线上无回归后，可删除 `AmapRouteConfirmation` 与 `route-confirmation` 相关代码。
+3. 移除 `routeConfirmation` 响应和前端引用。
+4. 直接删除 `AmapRouteConfirmation` 与 `route-confirmation` 相关代码。
 
-待确认：是否本期直接删除旧内嵌组件代码。
+## 12. 已确认产品决策
 
-## 12. 待确认问题
-
-1. 地图整体失败时，是否完全不生成旅行建议？
-2. 高德核验链接粒度：每个候选一个，还是每种交通方式一个？
-3. 交通摘要展示顺序：AI 建议前，还是 AI 建议后？
-4. 是否展示公共交通线路名？
-5. 是否本期直接删除旧 iframe 组件和相关代码？
+1. 地图导航有一个地点失败时，提示用户核实地点，不生成完整决策建议。
+2. 高德核验链接粒度为每个候选目的地的每种交通方式一个链接。
+3. 交通摘要展示在 AI 建议前。
+4. 公共交通展示具体线路名。
+5. 本期直接删除旧 iframe 组件和相关代码。
