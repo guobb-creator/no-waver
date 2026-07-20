@@ -6,9 +6,9 @@
 | --- | --- |
 | 对应规格 | `004-embedded-amap-route-confirmation/spec.md` |
 | 对应方案 | `004-embedded-amap-route-confirmation/plan.md` |
-| 版本 | 0.2（已确认产品决策，待 iframe 可行性验证） |
+| 版本 | 0.3（已实现，待线上冒烟） |
 | 阶段 | Tasks |
-| 状态 | 可行性验证后待产品确认 |
+| 状态 | 已实现并通过本地验证，待线上冒烟 |
 
 ## 2. 实施约束
 
@@ -39,7 +39,7 @@
   - 依赖：T001
   - 验证：移动端 UA 通过；桌面 UA 不满足目标界面，需用户确认是否接受仅手机端继续。
 
-- [ ] T003 确认是否限定手机端实现。
+- [x] T003 确认是否限定手机端实现。
   - 文件：`specs/004-embedded-amap-route-confirmation/spec.md`、`plan.md`
   - 内容：确认桌面端是否暂不展示内嵌高德路线区；确认本规格是否以手机端为目标继续开发。
   - 依赖：T002
@@ -47,37 +47,37 @@
 
 ### 阶段 B：响应契约与后端路线确认数据
 
-- [ ] T004 定义 `RouteConfirmation` 类型。
+- [x] T004 定义 `RouteConfirmation` 类型。
   - 文件：建议 `lib/route-confirmation/types.ts`
   - 内容：定义 origin、candidates、availableModes、defaultCandidateId、defaultMode、notice。
   - 依赖：T003
   - 验证：TypeScript 类型可被 API 和前端复用。
 
-- [ ] T005 扩展旅行 API 响应类型。
+- [x] T005 扩展旅行 API 响应类型。
   - 文件：`app/page.tsx` 或独立共享类型文件
   - 内容：`DecisionApiResponse` 增加可选 `routeConfirmation`。
   - 依赖：T004
   - 验证：日常响应不受影响，旅行旧字段保持兼容。
 
-- [ ] T006 扩展地图路线内部数据，保留高德坐标。
+- [x] T006 扩展地图路线内部数据，保留高德坐标。
   - 文件：`lib/map-routing/types.ts`、`lib/map-routing/amap-client.ts`
   - 内容：RouteSummary 或 CandidateRouteSummary 增加起终点 location。
   - 依赖：T004
   - 验证：不返回原始高德 JSON，不暴露 Key。
 
-- [ ] T007 实现可用交通方式提取。
+- [x] T007 实现可用交通方式提取。
   - 文件：建议 `lib/route-confirmation/build-route-confirmation.ts`
   - 内容：从 RouteSummary 中整理每个候选目的地的 `availableModes`。
   - 依赖：T006
   - 验证：不可用交通方式不进入按钮列表。
 
-- [ ] T008 实现默认目的地和默认交通方式选择。
+- [x] T008 实现默认目的地和默认交通方式选择。
   - 文件：建议 `lib/route-confirmation/build-route-confirmation.ts`
   - 内容：默认目的地按路线综合更优或第一个候选；默认交通方式优先公共交通，公共交通不可用时选择下一可用方式。
   - 依赖：T007
   - 验证：有公交优先公交；公交不可用时选择下一可用方式。
 
-- [ ] T009 在 `/api/decision` 成功响应中返回 `routeConfirmation`。
+- [x] T009 在 `/api/decision` 成功响应中返回 `routeConfirmation`。
   - 文件：`app/api/decision/route.ts`
   - 内容：仅在地图路线成功时返回；地图失败降级时不返回。
   - 依赖：T006、T007、T008
@@ -85,25 +85,25 @@
 
 ### 阶段 C：高德 URL 与前端组件
 
-- [ ] T010 实现高德 URI URL 构造。
+- [x] T010 实现高德 URI URL 构造。
   - 文件：建议 `lib/route-confirmation/amap-uri.ts`
   - 内容：生成 iframe URL 和打开导航 URL；正确编码坐标、名称、交通方式、`callnative`。
   - 依赖：T004
   - 验证：单测覆盖各交通方式和中文地名。
 
-- [ ] T011 新增 `AmapRouteConfirmation` 组件。
+- [x] T011 新增 `AmapRouteConfirmation` 组件。
   - 文件：`components/AmapRouteConfirmation.tsx`
   - 内容：默认折叠；展开后展示标题、说明、目的地 tabs、交通方式 tabs、iframe、打开高德按钮。
   - 依赖：T004、T010
   - 验证：组件测试覆盖渲染、展开与切换。
 
-- [ ] T012 实现 iframe 运行时异常提示。
+- [x] T012 实现 iframe 运行时异常提示。
   - 文件：`components/AmapRouteConfirmation.tsx`
   - 内容：加载状态、超时提示、重试入口；该提示仅处理网络/运行时异常，不作为产品降级方案。
   - 依赖：T011
   - 验证：测试模拟超时后显示重试提示。
 
-- [ ] T013 接入旅行结果页。
+- [x] T013 接入旅行结果页。
   - 文件：`app/page.tsx`
   - 内容：旅行成功且有 `routeConfirmation` 时渲染确认区；日常不展示。
   - 依赖：T005、T009、T012
@@ -111,13 +111,13 @@
 
 ### 阶段 D：样式与移动端
 
-- [ ] T014 添加路线确认区样式。
+- [x] T014 添加路线确认区样式。
   - 文件：`app/globals.css`
   - 内容：折叠卡片、tabs、iframe、按钮、运行时异常提示、移动端高度约 560px。
   - 依赖：T011
   - 验证：手机视口无横向滚动。
 
-- [ ] T015 优化可访问性。
+- [x] T015 优化可访问性。
   - 文件：`components/AmapRouteConfirmation.tsx`
   - 内容：展开按钮、tabs/button aria 状态；iframe title；外链按钮可读。
   - 依赖：T011
@@ -125,25 +125,25 @@
 
 ### 阶段 E：测试、验证与上线
 
-- [ ] T016 补充单元测试。
+- [x] T016 补充单元测试。
   - 文件：`tests/unit/*`
   - 内容：类型构造、URL 构造、默认公共交通、组件折叠/展开、组件切换、运行时异常提示。
   - 依赖：T008、T010、T012
   - 验证：`npm test -- --run` 通过。
 
-- [ ] T017 补充路由测试。
+- [x] T017 补充路由测试。
   - 文件：`tests/unit/decision-route.test.ts`
   - 内容：旅行成功返回 routeConfirmation；clarification/fallback 不返回。
   - 依赖：T009
   - 验证：原旅行能力不回归。
 
-- [ ] T018 更新 E2E 测试。
+- [x] T018 更新 E2E 测试。
   - 文件：`tests/e2e/decision-flow.spec.ts`
   - 内容：旅行结果展示折叠的高德确认区、展开 iframe、切换目的地/交通方式、打开高德链接、日常不展示。
   - 依赖：T013、T014、T015
   - 验证：`npm run test:e2e` 通过。
 
-- [ ] T019 执行本地完整验证。
+- [x] T019 执行本地完整验证。
   - 文件：无
   - 内容：运行 lint、单元测试、构建、E2E。
   - 依赖：T016、T017、T018
@@ -214,9 +214,9 @@ T013 + T014 + T015 → T018 → T019 → T020 → T021
 | --- | --- | --- |
 | 2026-07-20 | 用户确认待定项 | 已确认：默认折叠、公共交通、不接受降级、不展示置信度、移动端高度约 560px |
 | 2026-07-20 | 高德 iframe 可行性 spike | 移动端通过；桌面端不满足目标界面，待用户确认是否限定手机端继续 |
-| 待执行 | 用户确认手机端范围 | 待执行 |
-| 待执行 | `npm run lint` | 待执行 |
-| 待执行 | `npm test -- --run` | 待执行 |
-| 待执行 | `npm run build` | 待执行 |
-| 待执行 | `npm run test:e2e` | 待执行 |
+| 2026-07-20 | 用户确认手机端范围 | 已确认：仅手机端即可 |
+| 2026-07-20 | `npm run lint` | 通过 |
+| 2026-07-20 | `npm test -- --run` | 通过，10 个测试文件、46 个测试用例 |
+| 2026-07-20 | `npm run build` | 通过 |
+| 2026-07-20 | `npm run test:e2e` | 通过，Chromium 与 mobile-chrome 共 12 个用例 |
 | 待执行 | 线上旅行冒烟测试 | 待执行 |

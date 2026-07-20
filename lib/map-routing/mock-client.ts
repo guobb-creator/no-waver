@@ -24,10 +24,12 @@ export class MockMapRoutingClient implements MapRoutingClient {
       summary: {
         originName: input.originName,
         resolvedOriginName: input.originName,
+        originLocation: '120.141,30.259',
         candidates: [
           {
             destinationName: input.candidateNames[0],
             resolvedDestinationName: input.candidateNames[0],
+            location: '120.100,30.240',
             city: input.cityHint,
             routes: [
               { mode: 'transit', durationMinutes: 25, distanceMeters: 5200, available: true },
@@ -39,6 +41,7 @@ export class MockMapRoutingClient implements MapRoutingClient {
           {
             destinationName: input.candidateNames[1],
             resolvedDestinationName: input.candidateNames[1],
+            location: '120.140,30.253',
             city: input.cityHint,
             routes: [
               { mode: 'transit', durationMinutes: 45, distanceMeters: 9800, available: true },

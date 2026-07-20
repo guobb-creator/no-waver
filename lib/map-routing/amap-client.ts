@@ -110,6 +110,7 @@ export class AmapMapRoutingClient implements MapRoutingClient {
         summary: {
           originName: input.originName,
           resolvedOriginName: origin.resolvedName,
+          originLocation: origin.location,
           candidates: summaries,
         },
       };
@@ -210,6 +211,7 @@ export class AmapMapRoutingClient implements MapRoutingClient {
     return {
       destinationName: destination.inputName,
       resolvedDestinationName: destination.resolvedName,
+      location: destination.location,
       city: destination.city,
       routes: routeResults,
     };

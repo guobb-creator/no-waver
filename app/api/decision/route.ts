@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDecisionModelClient } from '@/lib/decision-model/client-factory';
 import { getMapRoutingClient } from '@/lib/map-routing/client-factory';
 import { validateExtractedPlaces, validateQuestionPlaceholders } from '@/lib/place-sanity';
+import { buildRouteConfirmation } from '@/lib/route-confirmation/build-route-confirmation';
 import { validateQuestion } from '@/lib/validation';
 
 export const runtime = 'nodejs';
@@ -67,11 +68,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ ...routeResult, maxInputChars: client.maxInputChars });
     }
 
-    const result =
-      routeResult.status === 'success'
-        ? await client.decideWithRoutes(validation.question, routeResult.summary)
-        : await client.decideWithoutMapData(validation.question, routeResult.message);
+    if (routeResult.status === 'success') {
+      const result = await client.decideWithRoutes(validation.question, routeResult.summary);
+      return NextResponse.json({
+        ...result,
+        routeConfirmation: buildRouteConfirmation(routeResult.summary),
+        maxInputChars: client.maxInputChars,
+      });
+    }
 
+    const result = await client.decideWithoutMapData(validation.question, routeResult.message);
     return NextResponse.json({ ...result, maxInputChars: client.maxInputChars });
   } catch {
     return NextResponse.json(

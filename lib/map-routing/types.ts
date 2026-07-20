@@ -11,6 +11,7 @@ export type RouteOption = {
 export type CandidateRouteSummary = {
   destinationName: string;
   resolvedDestinationName: string;
+  location?: string;
   city?: string;
   routes: RouteOption[];
 };
@@ -18,6 +19,7 @@ export type CandidateRouteSummary = {
 export type RouteSummary = {
   originName: string;
   resolvedOriginName?: string;
+  originLocation?: string;
   candidates: [CandidateRouteSummary, CandidateRouteSummary];
 };
 

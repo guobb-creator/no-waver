@@ -21,6 +21,11 @@ describe('POST /api/decision', () => {
     expect(typeof body.message).toBe('string');
     expect(body.message).toContain('路线对比');
     expect(body.message).toContain('我的建议');
+    expect(body.routeConfirmation).toMatchObject({
+      origin: { name: '西湖' },
+      defaultMode: 'transit',
+    });
+    expect(body.routeConfirmation.candidates).toHaveLength(2);
     expect(body.maxInputChars).toBeGreaterThan(0);
   });
 
@@ -39,6 +44,7 @@ describe('POST /api/decision', () => {
 
     expect(response.status).toBe(200);
     expect(body.status).toBe('needs_clarification');
+    expect(body.routeConfirmation).toBeUndefined();
   });
 
   it('asks the user to replace placeholder A/B/C place names before map routing', async () => {
@@ -51,6 +57,7 @@ describe('POST /api/decision', () => {
     expect(response.status).toBe(200);
     expect(body.status).toBe('needs_clarification');
     expect(body.message).toContain('示例占位符');
+    expect(body.routeConfirmation).toBeUndefined();
   });
 
   it('falls back when map routing is unavailable', async () => {
@@ -60,5 +67,6 @@ describe('POST /api/decision', () => {
     expect(response.status).toBe(200);
     expect(body.status).toBe('success');
     expect(body.message).toContain('暂时没有获取到地图导航数据');
+    expect(body.routeConfirmation).toBeUndefined();
   });
 });

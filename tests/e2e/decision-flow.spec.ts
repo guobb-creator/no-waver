@@ -4,6 +4,32 @@ const successResponse = {
   status: 'success',
   message: '路线对比：\n\n灵隐寺：公交/地铁约 25 分钟，驾车/打车约 12 分钟\n岳王庙：公交/地铁约 15 分钟，骑行约 10 分钟\n\n我的建议：请优先选择交通更顺路的目的地。',
   maxInputChars: 12000,
+  routeConfirmation: {
+    origin: {
+      name: '西湖',
+      resolvedName: '杭州西湖',
+      location: '120.141,30.259',
+    },
+    candidates: [
+      {
+        id: 'candidate-0',
+        name: '灵隐寺',
+        resolvedName: '灵隐寺',
+        location: '120.100,30.240',
+        availableModes: ['transit', 'driving'],
+      },
+      {
+        id: 'candidate-1',
+        name: '岳王庙',
+        resolvedName: '岳王庙',
+        location: '120.140,30.253',
+        availableModes: ['transit', 'cycling', 'walking'],
+      },
+    ],
+    defaultCandidateId: 'candidate-1',
+    defaultMode: 'transit',
+    notice: 'AI 建议基于本次高德路线数据生成；下方为高德路线页，实际导航以高德为准。',
+  },
 };
 
 const clarificationResponse = {
@@ -18,7 +44,7 @@ const dailyResponse = {
   maxInputChars: 12000,
 };
 
-test('submits the editable default example and shows a plain-text reply', async ({ page }) => {
+test('submits the editable default example and shows a plain-text reply', async ({ page }, testInfo) => {
   await page.route('**/api/decision', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -37,6 +63,21 @@ test('submits the editable default example and shows a plain-text reply', async 
   await expect(page.getByRole('heading', { name: '给你的建议' })).toBeVisible();
   await expect(page.getByText('路线对比', { exact: false })).toBeVisible();
   await expect(page.getByText('交通更顺路', { exact: false })).toBeVisible();
+
+  if (testInfo.project.name === 'mobile-chrome') {
+    await expect(page.getByRole('heading', { name: '高德路线确认' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '查看高德路线' })).toBeVisible();
+    await page.getByRole('button', { name: '查看高德路线' }).click();
+    await expect(page.getByTitle('岳王庙公交/地铁高德路线')).toBeVisible();
+    await expect(page.getByRole('link', { name: '打开高德地图导航' })).toHaveAttribute(
+      'href',
+      /uri\.amap\.com\/navigation/,
+    );
+    await page.getByRole('button', { name: '灵隐寺' }).click();
+    await expect(page.getByTitle('灵隐寺公交/地铁高德路线')).toBeVisible();
+  } else {
+    await expect(page.getByRole('heading', { name: '高德路线确认' })).not.toBeVisible();
+  }
 });
 
 test('defaults to daily decisions and submits to the daily endpoint', async ({ page }) => {
@@ -75,6 +116,7 @@ test('defaults to daily decisions and submits to the daily endpoint', async ({ p
   await expect(page.getByText('今晚点外卖', { exact: false })).toBeVisible();
   expect(dailyRequestCount).toBe(1);
   expect(travelRequestCount).toBe(0);
+  await expect(page.getByRole('heading', { name: '高德路线确认' })).not.toBeVisible();
 });
 
 test('preserves each category input and latest reply while switching', async ({ page }) => {
